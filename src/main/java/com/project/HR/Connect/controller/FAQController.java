@@ -2,6 +2,8 @@ package com.project.HR.Connect.controller;
 
 import com.project.HR.Connect.entitie.FAQ;
 import com.project.HR.Connect.service.FAQService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +22,20 @@ public class FAQController {
     FAQService faqService;
 
     @GetMapping
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<FAQ> getFAQById(@RequestParam Integer id) {
+        return ResponseEntity.ok(faqService.getFAQ(id));
+    }
+
+    @GetMapping("/all")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<FAQ>> getAllFAQ(){
         return ResponseEntity.ok(faqService.getAll());
     }
 
-    @PostMapping
+    @PutMapping
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<String> createOrUpdateFAQ(@RequestBody FAQ faq){
         var out = faqService.add(faq);
         if (out.getFirst()){
@@ -37,6 +47,7 @@ public class FAQController {
 
     @DeleteMapping
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<String> deleteFAQ(@RequestParam Integer id){
         if (faqService.delete(id)){
             return ResponseEntity.ok().build();
@@ -45,11 +56,13 @@ public class FAQController {
         }
     }
 
-    @PostMapping("/upload-file")
+    @PostMapping(value = "/upload-file", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<FAQ> addFaqFile(@RequestParam("file") MultipartFile file,
                                                    @RequestParam("id") Integer ID) {
         String filename = file.getOriginalFilename();
+        assert filename != null;
         if(filename.substring(filename.lastIndexOf(".")).contains(".pdf")) {
             FAQ faq;
             try {
@@ -65,6 +78,7 @@ public class FAQController {
     }
 
     @GetMapping("/get-file")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<byte[]> getFaqFile(@RequestParam("id") Integer ID) throws IOException {
         byte[] fileData = faqService.getFaqFile(ID);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(fileData);

@@ -30,12 +30,11 @@ public class EmailSenderService {
         properties.put("mail.smtp.starttls.enable", "true");
         properties.put("mail.smtp.auth", "true");
 
-        Session session = Session.getInstance(properties, new javax.mail.Authenticator(){
+        return Session.getInstance(properties, new Authenticator(){
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication("noreply.hrconnect1@gmail.com", "fzmereeemwmuefgw");
             }
         });
-        return session;
     }
     public void sendEmail(EmailDTO emailDTO) {
         Session session = session();

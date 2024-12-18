@@ -1,13 +1,11 @@
 package com.project.HR.Connect.service;
 
-import com.project.HR.Connect.entitie.Request;
-import com.project.HR.Connect.entitie.RequestType;
-import com.project.HR.Connect.entitie.Status;
-import com.project.HR.Connect.entitie.User;
+import com.project.HR.Connect.entitie.*;
 import com.project.HR.Connect.repository.RequestRepository;
 import org.antlr.v4.runtime.misc.Pair;
 import org.antlr.v4.runtime.misc.Triple;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -202,5 +200,20 @@ public class RequestService {
         return new Triple<>(new Pair<>(statuses, statusesValues),
                 new Pair<>(requestTypes, requestTypesValues),
                 new Pair<>(inOutOfOffice, inOutOfOfficeValues));
+    }
+
+    public boolean deleteRequest(Integer ID) {
+        try {
+            Optional<Request> r = requestRepository.findById(ID);
+            if (r.isEmpty()) {
+                return false;
+            }
+
+            Request request = r.get();
+            requestRepository.delete(request);
+        } catch (DataIntegrityViolationException e) {
+            return false;
+        }
+        return true;
     }
 }

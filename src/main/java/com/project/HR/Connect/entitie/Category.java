@@ -5,5 +5,5 @@ public enum Category{
     Policy_changes,
     Upcoming_events,
     News,
-    Training_opportunities,
+    Training_opportunities
 }

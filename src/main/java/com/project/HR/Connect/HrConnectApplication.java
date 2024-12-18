@@ -8,10 +8,10 @@ public class HrConnectApplication {
 
 	public static void main(String[] args){
 
-		if (System.getenv("GOOGLE_APPLICATION_CREDENTIALS") == null){
-			System.out.println("Please set GOOGLE_APPLICATION_CREDENTIALS environment variable to <path to credentials.json>");
-			return;
-		}
+//		if (System.getenv("GOOGLE_APPLICATION_CREDENTIALS") == null){
+//			System.out.println("Please set GOOGLE_APPLICATION_CREDENTIALS environment variable to <path to credentials.json>");
+//			return;
+//		}
 		SpringApplication.run(HrConnectApplication.class, args);
 
 	}

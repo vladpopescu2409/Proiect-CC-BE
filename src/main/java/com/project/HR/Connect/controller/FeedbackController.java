@@ -4,6 +4,8 @@ import com.project.HR.Connect.entitie.Article;
 import com.project.HR.Connect.entitie.Feedback;
 import com.project.HR.Connect.security.JWTUtils;
 import com.project.HR.Connect.service.FeedbackService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +25,14 @@ public class FeedbackController {
     @Autowired
     JWTUtils jwtUtils;
 
-    @PostMapping
+    @GetMapping
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<Feedback> getFeedbackById(@RequestParam("id") Integer id) {
+        return ResponseEntity.ok(feedbackService.getFeedbackById(id).get());
+    }
+
+    @PutMapping
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> addNewFeedback(@RequestHeader("Authorization") String authorizationHeader,
                                             @RequestBody Feedback feedback) {
         String email = jwtUtils.getEmailFromJwtToken(jwtUtils.normalizeAuthorizationHeader(authorizationHeader));
@@ -37,6 +46,7 @@ public class FeedbackController {
 
     @DeleteMapping
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> deleteFeedback(@RequestParam("id") Integer id) {
         if(feedbackService.deleteFeedback(id)) {
             return ResponseEntity.ok().build();
@@ -47,11 +57,13 @@ public class FeedbackController {
 
     @GetMapping("/all")
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Feedback>> getAllFeedbacks() {
         return ResponseEntity.ok(feedbackService.getAll());
     }
 
     @GetMapping("/by")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> getFeedbackAuthor(@RequestParam("id") Integer id) {
         Optional<Feedback> fb = feedbackService.getFeedbackById(id);
         Feedback feedback = fb.get();
@@ -60,6 +72,7 @@ public class FeedbackController {
 
     @PostMapping("/fav")
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> updateFavouriteFeedbackValue(@RequestParam("id") Integer id) {
         feedbackService.updateFavourite(id);
         return ResponseEntity.ok("Favourite state updated!");

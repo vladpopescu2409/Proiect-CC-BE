@@ -2,6 +2,8 @@ package com.project.HR.Connect.controller;
 
 import com.project.HR.Connect.entitie.Article;
 import com.project.HR.Connect.service.ArticleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ public class ArticleController {
 
     @PostMapping
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> addArticle(@RequestBody Article article) {
         var out = articleService.addNewArticle(article);
         if (out.getFirst()) {
@@ -34,6 +37,7 @@ public class ArticleController {
 
     @DeleteMapping
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> deleteArticle(@RequestParam Integer id) {
         if(articleService.deleteArticle(id)) {
             return ResponseEntity.ok().build();
@@ -42,8 +46,9 @@ public class ArticleController {
         }
     }
 
-    @PostMapping("/upload-image")
+    @PostMapping(value = "/upload-image", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('hr')")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Article> addArticleImage(@RequestParam("image") MultipartFile image,
                                              @RequestParam("id") Integer ID) {
         String imageName = image.getOriginalFilename();
@@ -64,16 +69,19 @@ public class ArticleController {
     }
 
     @GetMapping("/all")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<Article>> getAllArticles() {
         return ResponseEntity.ok(articleService.getAllArticles());
     }
 
     @GetMapping("/get-article")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Optional<Article>> getArticleById(@RequestParam("id") Integer ID) {
         return ResponseEntity.ok(articleService.getArticleById(ID));
     }
 
     @GetMapping("/by")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> getArticleAuthor(@RequestParam("id") Integer id) {
         Optional<Article> art = articleService.getArticleById(id);
         Article article = art.get();
@@ -81,6 +89,7 @@ public class ArticleController {
     }
 
     @GetMapping("/author-job")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<?> getArticleAuthorJob(@RequestParam("id") Integer id) {
         Optional<Article> art = articleService.getArticleById(id);
         Article article = art.get();
@@ -88,6 +97,7 @@ public class ArticleController {
     }
 
     @GetMapping("/get-image")
+    @Operation(summary = "My endpoint", security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<byte[]> getArticleImage(@RequestParam("id") Integer ID) throws IOException {
         byte[] imageData = articleService.getImageOfArticle(ID);
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(imageData);

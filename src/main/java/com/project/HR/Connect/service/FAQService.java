@@ -27,6 +27,10 @@ public class FAQService {
     @Autowired
     private FAQRepository faqRepository;
 
+    public FAQ getFAQ(Integer id) {
+        return faqRepository.findById(id).get();
+    }
+
     public List<FAQ> getAll(){
         return faqRepository.findAll();
     }
@@ -62,10 +66,12 @@ public class FAQService {
             ff.delete();
         }
 
+        //formez numele fisierului: id.pdf
         assert originalFilename != null;
         String newFileName = faq.getId().toString()
                 .concat(originalFilename.substring(originalFilename.lastIndexOf(".")));
 
+        // pun calea catre fisier
         String filePath = FAQs_FOLDER + "/" + newFileName;
         faq.setFaqFilePath(filePath);
         faqRepository.save(faq);
@@ -81,7 +87,6 @@ public class FAQService {
         Optional<FAQ> f = faqRepository.findById(ID);
         FAQ faq = f.get();
         String filePath = faq.getFaqFilePath();
-        byte[] files = Files.readAllBytes(new File(filePath).toPath());
-        return files;
+        return Files.readAllBytes(new File(filePath).toPath());
     }
 }
