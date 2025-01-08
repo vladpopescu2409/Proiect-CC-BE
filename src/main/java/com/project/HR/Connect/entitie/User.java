@@ -38,6 +38,7 @@ public class User {
     @OneToOne
     private Address address;
 
+
     @JoinColumn(name = "login_details_id")
     @OneToOne
     private LoginDetails loginDetails;

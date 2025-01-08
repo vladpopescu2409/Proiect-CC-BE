@@ -144,5 +144,6 @@ public class UserController {
         String email = jwtUtils.getEmailFromJwtToken(jwtUtils.normalizeAuthorizationHeader(authorizationHeader));
         return ResponseEntity.ok(userService.getPositionOfUser(email));
     }
+
 }
 

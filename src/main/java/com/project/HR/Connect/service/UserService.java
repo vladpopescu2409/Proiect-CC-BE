@@ -4,6 +4,7 @@ package com.project.HR.Connect.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.project.HR.Connect.client.AuthServiceClient;
 import com.project.HR.Connect.entitie.Address;
 import com.project.HR.Connect.entitie.IdentityCard;
 import com.project.HR.Connect.entitie.LoginDetails;
@@ -13,6 +14,7 @@ import com.project.HR.Connect.security.JWTUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.util.Pair;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,11 +52,13 @@ public class UserService {
     @Autowired
     JWTUtils jwtUtils;
 
+//    @Autowired
+//    private AuthServiceClient authServiceClient;
+
 
     public List<User> getAll(){
         return userRepository.findAll();
     }
-
 
     @Transactional(rollbackFor = Exception.class)
     public Pair<Boolean,String> add(User userIN, LoginDetails loginDetailsIN, Address addressIN, IdentityCard identityCardIN){
@@ -63,31 +67,35 @@ public class UserService {
             return Pair.of(false, "You user data is incomplete please complete all fields(user, loginDetails, address, identityCard, departmentName)!");
         }
         try {
+            // Step 1: Save address, identity card, and set default vacation/sick days
             userIN.setAddress(addressRepository.save(addressIN));
-
-            if (loginDetailsIN.getId() == null || loginDetailsIN.getPassword() != null) {
-                loginDetailsIN.setPassword(passwordEncoder.encode(loginDetailsIN.getPassword()));
-            }else {
-                loginDetailsIN.setPassword(loginDetailsRepository.findById(loginDetailsIN.getId()).get().getPassword());
-            }
-            userIN.setLoginDetails(loginDetailsRepository.save(loginDetailsIN));
             userIN.setIdentityCard(identityCardRepository.save(identityCardIN));
-            userIN.setVacationDays(24);
-            userIN.setSickDays(183 );
+            userIN.setVacationDays(24);  // You can customize this default value
+            userIN.setSickDays(183);  // You can customize this default value
+
+            // Step 2: Send LoginDetails to auth-service and get the saved LoginDetails with an ID
+            //ResponseEntity<LoginDetails> response = authServiceClient.createLoginDetails(loginDetailsIN);
+
+            // Step 3: Set the received LoginDetails in the User entity
+            userIN.setLoginDetails(loginDetailsIN);
+
+            // Step 4: Save the User entity with the associated LoginDetails
             User user = userRepository.save(userIN);
 
+            // Convert the saved user to a JSON string (optional step)
             ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
             String json = ow.writeValueAsString(user);
+
             return Pair.of(true, json);
         } catch (DataIntegrityViolationException e){
             return Pair.of(false, "User was not added because of a database error." + e);
         } catch (JsonProcessingException e) {
             return Pair.of(false, "User was not added because of a json error: " + e.getMessage());
         } catch (NoSuchElementException e){
-            return Pair.of(false, "User was not edited because you can not edit an nonexistent user: " + e.getMessage());
+            return Pair.of(false, "User was not edited because you can not edit a nonexistent user: " + e.getMessage());
         }
-
     }
+
 
     @Transactional
     public Boolean delete(Integer id){
@@ -162,5 +170,15 @@ public class UserService {
         User currentUser = userRepository.findUserByLoginDetailsEmail(email);
         return currentUser.getPosition().toString();
     }
+
+//    public String authenticateUser(LoginDetails loginDetails) {
+//        // Call auth-service to authenticate and get JWT
+//        ResponseEntity<String> response = authServiceClient.authenticateUser(loginDetails);
+//        if (response.getStatusCode().is2xxSuccessful()) {
+//            return response.getBody();  // JWT token is returned here
+//        } else {
+//            throw new RuntimeException("Authentication failed.");
+//        }
+//    }
 }
 
