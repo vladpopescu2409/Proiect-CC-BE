@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -50,11 +51,13 @@ public class UserService {
     RequestRepository requestRepository;
 
     @Autowired
+    private AuthServiceClient authServiceClient;
+
+    @Autowired
     JWTUtils jwtUtils;
 
-//    @Autowired
-//    private AuthServiceClient authServiceClient;
-
+    @Autowired
+    RestTemplate restTemplate;
 
     public List<User> getAll(){
         return userRepository.findAll();
@@ -75,22 +78,22 @@ public class UserService {
 
             // Step 2: Send LoginDetails to auth-service and get the saved LoginDetails with an ID
             //ResponseEntity<LoginDetails> response = authServiceClient.createLoginDetails(loginDetailsIN);
+            ResponseEntity<LoginDetails> response = authServiceClient.createLoginDetails(loginDetailsIN);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                LoginDetails savedLoginDetails = response.getBody();
+                // Step 3: Set the received LoginDetails in the User entity
+                assert savedLoginDetails != null;
+                LoginDetails userSavedLoginDetails = new LoginDetails(savedLoginDetails);
+                userIN.setLoginDetails(userSavedLoginDetails);
 
-            // Step 3: Set the received LoginDetails in the User entity
-            userIN.setLoginDetails(loginDetailsIN);
-
-            // Step 4: Save the User entity with the associated LoginDetails
-            User user = userRepository.save(userIN);
-
-            // Convert the saved user to a JSON string (optional step)
-            ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-            String json = ow.writeValueAsString(user);
-
-            return Pair.of(true, json);
+                // Step 4: Save the User entity with the associated LoginDetails
+                userRepository.save(userIN);
+                return Pair.of(true, "User added successfully.");
+            } else {
+                return Pair.of(false, "Failed to create login details in auth-service.");
+            }
         } catch (DataIntegrityViolationException e){
             return Pair.of(false, "User was not added because of a database error." + e);
-        } catch (JsonProcessingException e) {
-            return Pair.of(false, "User was not added because of a json error: " + e.getMessage());
         } catch (NoSuchElementException e){
             return Pair.of(false, "User was not edited because you can not edit a nonexistent user: " + e.getMessage());
         }
@@ -114,7 +117,10 @@ public class UserService {
 
             userRepository.delete(user);
 
-            if (loginDetails != null) loginDetailsRepository.delete(loginDetails);
+            if (loginDetails != null){
+                authServiceClient.delete(loginDetails.getEmail());
+                loginDetailsRepository.delete(loginDetails);
+            }
             if (address != null )addressRepository.delete(address);
             if (identityCard != null )identityCardRepository.delete(identityCard);
 
@@ -141,6 +147,16 @@ public class UserService {
             updated = true;
         }
         if (modifiedData.containsKey("password") && modifiedData.get("password") != null && !modifiedData.get("password").isBlank()){
+            String newPassword = modifiedData.get("password");
+
+            String authServiceUrl = "http://localhost:8080/auth/update-password";
+            Map<String, String> payload = Map.of(
+                    "email", email,
+                    "password", newPassword
+            );
+
+            authServiceClient.updatePassword(payload);
+
             self.getLoginDetails().setPassword(passwordEncoder.encode(modifiedData.get("password")));
             updated = true;
         }

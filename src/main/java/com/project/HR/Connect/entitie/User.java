@@ -40,7 +40,7 @@ public class User {
 
 
     @JoinColumn(name = "login_details_id")
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private LoginDetails loginDetails;
 
     @JoinColumn(name = "identity_card_id")
