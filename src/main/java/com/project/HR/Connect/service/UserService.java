@@ -56,9 +56,6 @@ public class UserService {
     @Autowired
     JWTUtils jwtUtils;
 
-    @Autowired
-    RestTemplate restTemplate;
-
     public List<User> getAll(){
         return userRepository.findAll();
     }
